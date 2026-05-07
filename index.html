@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SL Radio Bridge</title>
+    <title>SL Radio Bridge (Ad-Free)</title>
     <style>
         body { margin: 0; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
         #status { font-size: 24px; font-weight: bold; cursor: pointer; padding: 20px; border: 2px solid #fff; border-radius: 10px; background: #333; text-align: center; }
@@ -10,53 +10,39 @@
 </head>
 <body>
     <div id="status">RADIO OFF<br><span style="font-size:14px; font-weight:normal;">Click here to turn on the ignition</span></div>
-    <div id="player"></div>
+    
+    <iframe id="player" allow="autoplay"></iframe>
 
     <script>
-        var player;
         var currentVid = '';
         var statusDiv = document.getElementById('status');
+        var iframe = document.getElementById('player');
+        
+        // This is a public, ad-free proxy server that pulls directly from YouTube
+        var proxyBase = "https://vid.puffyan.us/embed/";
 
-        // 1. Load the official YouTube API
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        // 2. This runs when the API is ready
-        function onYouTubeIframeAPIReady() {
-            // We wait for the driver to click the prim face. This permanently unlocks the audio block!
-            statusDiv.addEventListener('click', function() {
-                statusDiv.innerHTML = "SYSTEM READY<br><span style='font-size:14px; font-weight:normal;'>Waiting for LSL to send a song...</span>";
-                statusDiv.style.cursor = "default";
-                
-                player = new YT.Player('player', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: '', // Starts empty
-                    playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1 },
-                    events: { 'onReady': onPlayerReady }
-                });
-            }, { once: true });
-        }
-
-        function onPlayerReady(event) {
+        // 1. Wait for the physical click on the dashboard
+        statusDiv.addEventListener('click', function() {
             statusDiv.style.display = 'none';
-            document.querySelector('iframe').style.display = 'block';
+            iframe.style.display = 'block';
             
-            // Start checking for silent messages from LSL
-            checkHash(); 
-            setInterval(checkHash, 1000); 
-        }
+            // Start checking for LSL commands
+            checkHash();
+            setInterval(checkHash, 1000);
+        }, { once: true });
 
-        // 3. The LSL Listener
-        // LSL will change the URL from index.html#OLD_SONG to index.html#NEW_SONG
-        // This function detects the change and swaps the audio instantly without reloading the page.
+        // 2. The LSL Listener
         function checkHash() {
-            var hash = window.location.hash.substring(1); 
+            var hash = window.location.hash.substring(1);
             if (hash && hash !== currentVid) {
-                currentVid = hash;
-                player.loadVideoById(currentVid); 
+                if (hash === "STOP") {
+                    iframe.src = ""; // Kill the stream
+                    currentVid = hash;
+                } else {
+                    currentVid = hash;
+                    // Route the YouTube ID through the ad-free proxy
+                    iframe.src = proxyBase + currentVid + "?autoplay=1";
+                }
             }
         }
     </script>
