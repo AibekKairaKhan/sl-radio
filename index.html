@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SL Radio Bridge (Direct Audio Engine)</title>
+    <title>SL Radio Bridge (Iframe Audio Engine)</title>
     <style>
         body { margin: 0; background-color: #111; color: #00ffcc; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         #status { font-size: 20px; font-weight: bold; cursor: pointer; padding: 20px; border: 2px solid #00ffcc; border-radius: 5px; background: #222; text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         #now-playing { display: none; font-size: 18px; text-align: center; }
+        /* Hide the iframe completely so we just see the neon text */
+        iframe { display: none; width: 0; height: 0; border: none; }
     </style>
 </head>
 <body>
     <div id="status">Ignition Off<br><span style="font-size:12px; color: #aaa;">Click to power on audio system</span></div>
     <div id="now-playing">SYSTEM ACTIVE<br><span style="font-size:12px; color: #aaa;">Awaiting LSL Frequency...</span></div>
     
-    <audio id="player"></audio>
+    <iframe id="player" allow="autoplay"></iframe>
 
     <script>
         var currentStream = '';
         var statusDiv = document.getElementById('status');
         var playingDiv = document.getElementById('now-playing');
-        var audio = document.getElementById('player');
+        var iframe = document.getElementById('player');
         
-        // The Chromium Ignition Bypass
         statusDiv.addEventListener('click', function() {
             statusDiv.style.display = 'none';
             playingDiv.style.display = 'block';
@@ -29,18 +30,15 @@
             setInterval(checkHash, 1000);
         }, { once: true });
 
-        // Listens for the SL HUD clicks
         function checkHash() {
             var hash = window.location.hash.substring(1);
             if (hash && hash !== currentStream) {
                 currentStream = hash;
                 if (hash === "STOP") {
-                    audio.pause();
-                    audio.src = "";
+                    iframe.src = "";
                     playingDiv.innerHTML = "SYSTEM STANDBY<br><span style='font-size:12px; color: #aaa;'>Audio stream terminated.</span>";
                 } else {
-                    audio.src = hash;
-                    audio.play();
+                    iframe.src = hash;
                     playingDiv.innerHTML = "STREAMING LIVE<br><span style='font-size:12px; color: #aaa;'>Connection secure.</span>";
                 }
             }
