@@ -1,43 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SL Radio Bridge (V3 Ad-Shield)</title>
+    <title>SL Radio Bridge (Direct Audio Engine)</title>
     <style>
-        body { margin: 0; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
-        #status { font-size: 24px; font-weight: bold; cursor: pointer; padding: 20px; border: 2px solid #fff; border-radius: 10px; background: #333; text-align: center; }
-        iframe { display: none; width: 100%; height: 100%; border: none; }
+        body { margin: 0; background-color: #111; color: #00ffcc; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        #status { font-size: 20px; font-weight: bold; cursor: pointer; padding: 20px; border: 2px solid #00ffcc; border-radius: 5px; background: #222; text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        #now-playing { display: none; font-size: 18px; text-align: center; }
     </style>
 </head>
 <body>
-    <div id="status">RADIO OFF<br><span style="font-size:14px; font-weight:normal;">Click here to turn on the ignition</span></div>
+    <div id="status">Ignition Off<br><span style="font-size:12px; color: #aaa;">Click to power on audio system</span></div>
+    <div id="now-playing">SYSTEM ACTIVE<br><span style="font-size:12px; color: #aaa;">Awaiting LSL Frequency...</span></div>
     
-    <iframe id="player" allow="autoplay"></iframe>
+    <audio id="player"></audio>
 
     <script>
-        var currentVid = '';
+        var currentStream = '';
         var statusDiv = document.getElementById('status');
-        var iframe = document.getElementById('player');
+        var playingDiv = document.getElementById('now-playing');
+        var audio = document.getElementById('player');
         
-        // Waits for you to click the prim to bypass the Chromium lock
+        // The Chromium Ignition Bypass
         statusDiv.addEventListener('click', function() {
             statusDiv.style.display = 'none';
-            iframe.style.display = 'block';
+            playingDiv.style.display = 'block';
             
             checkHash();
             setInterval(checkHash, 1000);
         }, { once: true });
 
-        // Listens for the V3 LSL script commands
+        // Listens for the SL HUD clicks
         function checkHash() {
             var hash = window.location.hash.substring(1);
-            if (hash && hash !== currentVid) {
+            if (hash && hash !== currentStream) {
+                currentStream = hash;
                 if (hash === "STOP") {
-                    iframe.src = ""; 
-                    currentVid = hash;
+                    audio.pause();
+                    audio.src = "";
+                    playingDiv.innerHTML = "SYSTEM STANDBY<br><span style='font-size:12px; color: #aaa;'>Audio stream terminated.</span>";
                 } else {
-                    currentVid = hash;
-                    // Bypasses Error 153 and strips tracking tokens to minimize ads
-                    iframe.src = "https://www.youtube-nocookie.com/embed/" + currentVid + "?autoplay=1&controls=0";
+                    audio.src = hash;
+                    audio.play();
+                    playingDiv.innerHTML = "STREAMING LIVE<br><span style='font-size:12px; color: #aaa;'>Connection secure.</span>";
                 }
             }
         }
