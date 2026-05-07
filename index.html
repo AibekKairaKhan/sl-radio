@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SL Radio Bridge (Ad-Free)</title>
+    <title>SL Radio Bridge (V3 Ad-Shield)</title>
     <style>
         body { margin: 0; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
         #status { font-size: 24px; font-weight: bold; cursor: pointer; padding: 20px; border: 2px solid #fff; border-radius: 10px; background: #333; text-align: center; }
@@ -18,30 +18,26 @@
         var statusDiv = document.getElementById('status');
         var iframe = document.getElementById('player');
         
-        // This is a public, ad-free proxy server that pulls directly from YouTube
-        var proxyBase = "https://vid.puffyan.us/embed/";
-
-        // 1. Wait for the physical click on the dashboard
+        // Waits for you to click the prim to bypass the Chromium lock
         statusDiv.addEventListener('click', function() {
             statusDiv.style.display = 'none';
             iframe.style.display = 'block';
             
-            // Start checking for LSL commands
             checkHash();
             setInterval(checkHash, 1000);
         }, { once: true });
 
-        // 2. The LSL Listener
+        // Listens for the V3 LSL script commands
         function checkHash() {
             var hash = window.location.hash.substring(1);
             if (hash && hash !== currentVid) {
                 if (hash === "STOP") {
-                    iframe.src = ""; // Kill the stream
+                    iframe.src = ""; 
                     currentVid = hash;
                 } else {
                     currentVid = hash;
-                    // Route the YouTube ID through the ad-free proxy
-                    iframe.src = proxyBase + currentVid + "?autoplay=1";
+                    // Bypasses Error 153 and strips tracking tokens to minimize ads
+                    iframe.src = "https://www.youtube-nocookie.com/embed/" + currentVid + "?autoplay=1&controls=0";
                 }
             }
         }
